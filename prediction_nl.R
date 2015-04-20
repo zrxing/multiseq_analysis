@@ -6,6 +6,10 @@ dprof = read.table("data/Ctcf_S2_dnase_data.txt.gz")
 cinfo = read.table("data/Ctcf_S2_site_and_chip_data.txt.gz",header = TRUE)
 ccount = cinfo[,6]
 
+ind.thresh=(rowSums(dprof)>0)&(rowSums(dprof)<2000)
+dprof=dprof[ind.thresh,]
+ccount=ccount[ind.thresh]
+
 train.size = round(0.8*dim(dprof)[1])
 set.seed(417)
 train.ind = sample(1:dim(dprof)[1],train.size,replace = FALSE)
