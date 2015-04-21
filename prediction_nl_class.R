@@ -88,7 +88,7 @@ for(i in 1:length(ccount.test)){
 }
 
 
-ccount.test.m = log(ccount.test+1)
+ccount.test.m = ccount.test
 ccount.test.class = 0
 for(i in 1:(length(prior.breaks)-1)){
   ccount.test.class = ccount.test.class + i*(ccount.test.m>=prior.breaks[i]&ccount.test.m<prior.breaks[i+1])
