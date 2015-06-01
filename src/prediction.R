@@ -1,5 +1,7 @@
 library(multiseq)
 
+nbase = 2^10
+
 normalize = function(x) x/sum(x)
 
 dprof = read.table("data/Ctcf_S2_dnase_data.txt.gz")
@@ -20,15 +22,15 @@ ccount.test = ccount[!train.ind]
 
 ##estimating mean intensity
 nr = 10
-eff.for = matrix(0,nr,1024)
-eff.rev = matrix(0,nr,1024)
-base.for = matrix(0,nr,1024)
-base.rev = matrix(0,nr,1024)
+eff.for = matrix(0,nr,nbase)
+eff.rev = matrix(0,nr,nbase)
+base.for = matrix(0,nr,nbase)
+base.rev = matrix(0,nr,nbase)
 
 for(i in 1:nr){
   ind = sample(1:dim(dprof.train)[1],1000)
-  est.for = multiseq(as.matrix(dprof.train[ind,1:1024]),log(ccount.train[ind]+1),lm.approx = TRUE)
-  est.rev = multiseq(as.matrix(dprof.train[ind,1025:2048]),log(ccount.train[ind]+1),lm.approx = TRUE)
+  est.for = multiseq(as.matrix(dprof.train[ind,1:nbase]),log(ccount.train[ind]+1),lm.approx = TRUE)
+  est.rev = multiseq(as.matrix(dprof.train[ind,(nbase + 1):(2 * nbase)]),log(ccount.train[ind]+1),lm.approx = TRUE)
   base.for[i,] = est.for$baseline.mean
   base.rev[i,] = est.rev$baseline.mean
   eff.for[i,] = est.for$effect.mean
@@ -60,9 +62,9 @@ lambda.rev = exp(rep(1,length(ccount.prior.val))%o%base.mean.rev + ccount.prior.
 lik.for = matrix(0,length(ccount.test),length(ccount.prior.val))
 lik.rev = matrix(0,length(ccount.test),length(ccount.prior.val))
 for(i in 1:length(ccount.test)){
-  loglik.ini.for = rowSums(t(apply(lambda.for,1,dpois,x = as.numeric(dprof.test[i,1:1024]),log = TRUE)))
+  loglik.ini.for = rowSums(t(apply(lambda.for,1,dpois,x = as.numeric(dprof.test[i,1:nbase]),log = TRUE)))
   loglik.ini.for = loglik.ini.for - max(loglik.ini.for)
-  loglik.ini.rev = rowSums(t(apply(lambda.rev,1,dpois,x = as.numeric(dprof.test[i,1025:2048]),log = TRUE)))
+  loglik.ini.rev = rowSums(t(apply(lambda.rev,1,dpois,x = as.numeric(dprof.test[i,(nbase + 1):(2 * nbase)]),log = TRUE)))
   loglik.ini.rev = loglik.ini.rev - max(loglik.ini.rev)
   lik.for[i,] = exp(loglik.ini.for)
   lik.rev[i,] = exp(loglik.ini.rev)
@@ -77,14 +79,26 @@ ccount.post.prob.rev = t(apply(ccount.post.prob.rev,1,normalize))
 
 ccount.post.mean.for = 0	
 ccount.post.mode.for = 0
+ccount.post.logmean.for = 0
 ccount.post.mean.rev = 0
 ccount.post.mode.rev = 0
+ccount.post.logmean.rev = 0
 for(i in 1:length(ccount.test)){
   ccount.post.mode.for[i] = exp(ccount.post.val[which(ccount.post.prob.for[i,]==max(ccount.post.prob.for[i,]))])
   ccount.post.mean.for[i] = sum(exp(ccount.post.val)*ccount.post.prob.for[i,])
+  ccount.post.logmean.for[i] = sum(ccount.post.val*ccount.post.prob.for[i,])
   ccount.post.mode.rev[i] = exp(ccount.post.val[which(ccount.post.prob.rev[i,]==max(ccount.post.prob.rev[i,]))])
   ccount.post.mean.rev[i] = sum(exp(ccount.post.val)*ccount.post.prob.rev[i,])
+  ccount.post.logmean.rev[i] = sum(ccount.post.val*ccount.post.prob.rev[i,])
+  
 }
 
+plot(ccount.post.mean.for, ccount.test, xlim=c(0,2000), ylim=c(0,1000))
+abline(0, 1, col = 2)
 plot(ccount.post.mean.for,ccount.test)
-abline(0,1)
+abline(0, 1, col = 2)
+
+plot(ccount.post.logmean.for,log(ccount.test+1), xlim = c(0, 9), ylim = c(0, 9))
+abline(0, 1, col = 2)
+
+cor(ccount.post.logmean.for,log(ccount.test+1))

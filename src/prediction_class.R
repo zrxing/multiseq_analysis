@@ -1,14 +1,16 @@
 library(multiseq)
 
+nbase = 2^13
+
 normalize = function(x) x/sum(x)
 
 dprof = read.table("data/Ctcf_S2_dnase_data.txt.gz")
 cinfo = read.table("data/Ctcf_S2_site_and_chip_data.txt.gz",header = TRUE)
 ccount = cinfo[,6]
 
-ind.thresh=(rowSums(dprof)>0)&(rowSums(dprof)<2000)
-dprof=dprof[ind.thresh,]
-ccount=ccount[ind.thresh]
+#ind.thresh=(rowSums(dprof)>0)&(rowSums(dprof)<2000)
+#dprof=dprof[ind.thresh,]
+#ccount=ccount[ind.thresh]
 
 
 train.size = round(0.8*dim(dprof)[1])
@@ -25,15 +27,15 @@ ccount.test = ccount[!train.ind]
 
 ##estimating mean intensity
 nr = 10
-eff.for = matrix(0,nr,1024)
-eff.rev = matrix(0,nr,1024)
-base.for = matrix(0,nr,1024)
-base.rev = matrix(0,nr,1024)
+eff.for = matrix(0,nr,nbase)
+eff.rev = matrix(0,nr,nbase)
+base.for = matrix(0,nr,nbase)
+base.rev = matrix(0,nr,nbase)
 
 for(i in 1:nr){
   ind = sample(1:dim(dprof.train)[1],5000)
-  est.for = multiseq(as.matrix(dprof.train[ind,1:1024]),log(ccount.train[ind]+1),lm.approx = TRUE)
-  est.rev = multiseq(as.matrix(dprof.train[ind,1025:2048]),log(ccount.train[ind]+1),lm.approx = TRUE)
+  est.for = multiseq(as.matrix(dprof.train[ind,1:nbase]),log(ccount.train[ind]+1),lm.approx = TRUE)
+  est.rev = multiseq(as.matrix(dprof.train[ind,(nbase + 1):(2 * nbase)]),log(ccount.train[ind]+1),lm.approx = TRUE)
   base.for[i,] = est.for$baseline.mean
   base.rev[i,] = est.rev$baseline.mean
   eff.for[i,] = est.for$effect.mean
@@ -68,9 +70,9 @@ lambda.rev = exp(rep(1,length(ccount.prior.val))%o%base.mean.rev + ccount.prior.
 lik.for = matrix(0,length(ccount.test),length(ccount.prior.val))
 lik.rev = matrix(0,length(ccount.test),length(ccount.prior.val))
 for(i in 1:length(ccount.test)){
-  loglik.ini.for = rowSums(t(apply(lambda.for,1,dpois,x = as.numeric(dprof.test[i,1:1024]),log = TRUE)))
+  loglik.ini.for = rowSums(t(apply(lambda.for,1,dpois,x = as.numeric(dprof.test[i,1:nbase]),log = TRUE)))
   loglik.ini.for = loglik.ini.for - max(loglik.ini.for)
-  loglik.ini.rev = rowSums(t(apply(lambda.rev,1,dpois,x = as.numeric(dprof.test[i,1025:2048]),log = TRUE)))
+  loglik.ini.rev = rowSums(t(apply(lambda.rev,1,dpois,x = as.numeric(dprof.test[i,(nbase + 1):(2 * nbase)]),log = TRUE)))
   loglik.ini.rev = loglik.ini.rev - max(loglik.ini.rev)
   lik.for[i,] = exp(loglik.ini.for)
   lik.rev[i,] = exp(loglik.ini.rev)
@@ -108,5 +110,5 @@ for(i in 1:(length(prior.breaks)-1)){
 
 
 
-sum(ccount.post.class.for==ccount.test.class)/length(ccount.test.class)
+res.multiclass=sum(ccount.post.class.for==ccount.test.class)/length(ccount.test.class)
 sum(ccount.post.meanclass.for==ccount.test.class)/length(ccount.test.class)

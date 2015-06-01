@@ -6,9 +6,9 @@ dprof = read.table("data/Ctcf_S2_dnase_data.txt.gz")
 cinfo = read.table("data/Ctcf_S2_site_and_chip_data.txt.gz",header = TRUE)
 ccount = cinfo[,6]
 
-ind.thresh=(rowSums(dprof)>0)&(rowSums(dprof)<2000)
-dprof=dprof[ind.thresh,]
-ccount=ccount[ind.thresh]
+#ind.thresh=(rowSums(dprof)>0)&(rowSums(dprof)<2000)
+#dprof=dprof[ind.thresh,]
+#ccount=ccount[ind.thresh]
 
 train.size = round(0.8*dim(dprof)[1])
 set.seed(417)
@@ -85,5 +85,7 @@ for(i in 1:length(ccount.test)){
   ccount.post.mean.rev[i] = sum((ccount.post.val)*ccount.post.prob.rev[i,])
 }
 
+plot(ccount.post.mean.for,ccount.test,ylim=c(0,1000))
+abline(0,1,col=2)
 plot(ccount.post.mean.for,ccount.test)
-abline(0,1)
+abline(0,1,col=2)

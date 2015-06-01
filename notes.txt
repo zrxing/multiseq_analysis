@@ -1,0 +1,4 @@
+r2 of regression
+compare with centipede
+look at larger regions
+separate windows for large regions
