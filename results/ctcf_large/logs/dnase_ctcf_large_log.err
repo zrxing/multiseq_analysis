@@ -110,6 +110,7 @@ hurdle and zeroinfl functions by Achim Zeileis
 
 Loading required package: tools
 Loading required package: data.table
+<<<<<<< HEAD
 Loading required package: Rcpp
 Loading required package: ashr
 Loading required package: truncnorm
@@ -144,3 +145,5 @@ hurdle and zeroinfl functions by Achim Zeileis
 
 Loading required package: tools
 Loading required package: data.table
+=======
+>>>>>>> 62b7ca872bd1d0224a836d81ed8dbd007ef1f9b3
