@@ -51,7 +51,7 @@ prior.breaks.ini = function(x0,n){
   }
   return(x)
 }
-prior.breaks = c(prior.breaks.ini(0.445,11),seq(2.5,8.5,0.1))
+prior.breaks = c(prior.breaks.ini(0.445,11),seq(2.5,8.3,0.1))
 ccount.prior.info = hist(log(ccount.train+1),breaks = prior.breaks, plot = FALSE)
 ccount.prior.val = ccount.prior.info$mids
 ccount.prior.prob = normalize(smooth.spline(ccount.prior.info$mids,ccount.prior.info$counts)$y)
@@ -102,3 +102,6 @@ plot(ccount.post.logmean.for,log(ccount.test+1), xlim = c(0, 9), ylim = c(0, 9))
 abline(0, 1, col = 2)
 
 cor(ccount.post.logmean.for,log(ccount.test+1))
+#0.7984538
+
+

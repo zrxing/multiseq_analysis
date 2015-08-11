@@ -1,4 +1,5 @@
 library(multiseq)
+library(mixtools)
 
 nbase = 2^13
 
@@ -49,20 +50,53 @@ eff.mean.for = colMeans(eff.for)
 eff.mean.rev = colMeans(eff.rev)
 
 ##estimating prior
+# 
+# prior.breaks = log(quantile(ccount.train,c(0,0.5,0.7,0.9,0.99,1))+1)
+# prior.breaks[length(prior.breaks)] = ceiling(prior.breaks[length(prior.breaks)])
+# names(prior.breaks) = NULL
+# ccount.prior.info = hist(log(ccount.train+1),breaks = prior.breaks, plot = FALSE)
+# #ccount.prior.val = ccount.prior.info$mids
+# #ccount.prior.val = prior.breaks[1:(length(prior.breaks)-1)]
+# lccount.train = log(ccount.train+1)
+# ccount.prior.val = 0
+# for(i in 1:(length(prior.breaks)-1)){
+#   ccount.prior.val[i] = mean(lccount.train[lccount.train>=prior.breaks[i]&lccount.train<prior.breaks[i+1]])
+# }
+# #ccount.prior.prob = normalize(smooth.spline(ccount.prior.info$mids,ccount.prior.info$counts)$y)
+# ccount.prior.prob = normalize(ccount.prior.info$counts)
 
-prior.breaks = log(quantile(ccount.train,c(0,0.5,0.7,0.9,0.99,1))+1)
+#classifying between modes
+lccount.train = log(ccount.train+1)
+# modes = normalmixEM(log(ccount.train+1))$mu
+# midpoint = median(lccount.train[lccount.train > modes[1] & lccount.train < modes[2]])
+
+
+prior.breaks.ini = function(x0,n){
+  x = c(-x0,x0)
+  for(i in 3:n){
+    x[i] = 2 * log(i - 1) - x[i - 1]
+  }
+  return(x)
+}
+prior.breaks.cont = c(prior.breaks.ini(0.445,11),seq(2.5,8.5,0.1))
+ccount.prior.info.cont = hist(log(ccount.train+1),breaks = prior.breaks.cont, plot = FALSE)
+spline.fit.cont = smooth.spline(ccount.prior.info.cont$mids,ccount.prior.info.cont$counts)
+modes = ccount.prior.info.cont$mids[find.modes(spline.fit.cont$y)]
+midpoint = median(lccount.train[lccount.train > modes[1] & lccount.train < modes[2]])
+
+prior.breaks = c(0, midpoint, max(log(ccount.train+1)))
 prior.breaks[length(prior.breaks)] = ceiling(prior.breaks[length(prior.breaks)])
 names(prior.breaks) = NULL
 ccount.prior.info = hist(log(ccount.train+1),breaks = prior.breaks, plot = FALSE)
 #ccount.prior.val = ccount.prior.info$mids
 #ccount.prior.val = prior.breaks[1:(length(prior.breaks)-1)]
-lccount.train = log(ccount.train+1)
-ccount.prior.val = 0
-for(i in 1:(length(prior.breaks)-1)){
-  ccount.prior.val[i] = mean(lccount.train[lccount.train>=prior.breaks[i]&lccount.train<prior.breaks[i+1]])
-}
+ccount.prior.val = modes
 #ccount.prior.prob = normalize(smooth.spline(ccount.prior.info$mids,ccount.prior.info$counts)$y)
 ccount.prior.prob = normalize(ccount.prior.info$counts)
+
+
+
+
 
 ##computing the likelihood
 lambda.for = exp(rep(1,length(ccount.prior.val))%o%base.mean.for + ccount.prior.val%o%eff.mean.for)
