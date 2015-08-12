@@ -10,10 +10,11 @@ source("src/rocplot.R")
 
 file.names=list.files("data/")
 chip.file.names=file.names[seq(3,247,4)]
-dnase.file.names=file.names[seq(2,246,4)]
+dnase.file.names=file.names[seq(1,245,4)]
 
 for(j in 1:length(chip.file.names)){
   factor.name=paste(strsplit(chip.file.names[j],"_")[[1]][1],strsplit(chip.file.names[j],"_")[[1]][2],sep="_")
+  if(as.numeric(file.info(file.path("data",dnase.file.names[j]))[1])>(60*1e+6)) next
   try.test=try(dprof<-read.table(file.path("data",dnase.file.names[j])))
   if(class(try.test)=="try-error") next
   cinfo=read.table(file.path("data",chip.file.names[j]),header=TRUE)
@@ -331,6 +332,7 @@ for(j in 1:length(chip.file.names)){
   
   
   setwd("../..")
-  
+
+  print(j)
 }
   
