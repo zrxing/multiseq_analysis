@@ -43,4 +43,4 @@ base.mean.rev = colMeans(base.rev)
 eff.mean.for = colMeans(eff.for)
 eff.mean.rev = colMeans(eff.rev)
 
-save(base.mean.for, base.mean.rev, eff.mean.for, eff.mean.rev, dprof.test, ccount.test, file = "results/res_ms_ebf.Robj")
+save(base.mean.for, base.mean.rev, eff.mean.for, eff.mean.rev, ccount.train,  dprof.test, ccount.test, file = "results/res_ms_ebf.Robj")
