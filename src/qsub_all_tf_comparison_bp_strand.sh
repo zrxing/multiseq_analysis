@@ -1,4 +1,4 @@
-MEM=60g
+MEM=40g
 
 #create directory for logs (if it doesn't already exist)
 LOG_DIR="$HOME/projects/multiseq_analysis/results/roc/logs/"

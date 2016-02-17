@@ -1,3 +1,14 @@
 data/
-plots/
+results/roc/batf_large/
+results/roc/batf_multiple_window/
+results/roc/large/
+results/roc/large_multiseq/
+results/roc/logs/
+results/roc/mscentipede/
+results/roc/multiple_window/
+results/roc/no_centipede/
+results/roc/no_mscentipede/
+results/roc/old/
 results/plots/
+results/*.RData
+results/ctcf_large/
