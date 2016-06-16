@@ -53,7 +53,7 @@ print(factor.name)
 print(j)
 
 train.size = round(0.8*dim(dprof)[1])
-set.seed(1024)
+set.seed(100)
 train.ind = sample(1:dim(dprof)[1],train.size,replace = FALSE)
 train.ind = (1:dim(dprof)[1])%in%train.ind
 
