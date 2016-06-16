@@ -10,6 +10,8 @@ normalize = function(x) x/sum(x)
 dprof = read.table("data/Batf_S356_dnase_data_large.txt.gz")
 cinfo = read.table("data/Batf_S356_site_and_chip_data.txt.gz",header = TRUE)
 ccount = cinfo[,6]
+pscore = cinfo[, 5]
+
 
 train.size = round(0.8*dim(dprof)[1])
 set.seed(417)
@@ -51,10 +53,14 @@ for(l in 1:16){
 
 corr.ms = NULL
 corr.dcut = NULL
+corr.cent = NULL
 corr.rank.ms = NULL
 corr.rank.dcut = NULL
+corr.rank.cent = NULL
 ccount.post.logmean.list = list()
 dcut = list()
+centFit.pwm = list()
+centFit.pwm.all = list()
 
 for(l in 1:16){
   nr = 10
@@ -136,11 +142,24 @@ for(l in 1:16){
 
   dcut[[l]] = rowSums(dprof.test[, c(base.ind.for[[l]], base.ind.rev[[l]])])
   
+
+  #     centFit[[l]] <- fitCentipede(Xlist = list(DNase = as.matrix(dprof)[, c(base.ind.for[[l]], base.ind.rev[[l]])]), Y = matrix(rep(1,dim(dprof)[1], nc = 1)), sweeps = 1000)
+  #     centFit[[l]]$PostPr = centFit[[l]]$PostPr[!train.ind]
+  try.cent = try(centFit <- fitCentipede(Xlist = list(DNase = as.matrix(dprof)[, c(base.ind.for[[l]], base.ind.rev[[l]])]), Y = cbind(rep(1,dim(dprof)[1]),pscore), sweeps = 1000))
+  if(class(try.cent)=="try-error"){
+    centFit.pwm[[l]] = rep(NA, length(ccount.test))
+    centFit.pwm.all[[l]] = rep(NA, length(ccount))
+  }else{
+    centFit.pwm[[l]] = centFit$PostPr[!train.ind]
+    centFit.pwm.all[[l]] = centFit$PostPr
+  }
+  
   corr.ms[l] = cor(ccount.post.logmean.list[[l]], log(ccount.test + 1))
   corr.dcut[l] = cor(log(dcut[[l]] + 1), log(ccount.test + 1))
+  corr.cent[l] = cor(centFit.pwm[[l]], log(ccount.test + 1))
   corr.rank.ms[l] = cor(ccount.post.logmean.list[[l]], log(ccount.test + 1), method = "spearman")
   corr.rank.dcut[l] = cor(log(dcut[[l]] + 1), log(ccount.test + 1), method = "spearman")
-  
+  corr.rank.cent[l] = cor(centFit.pwm[[l]], log(ccount.test + 1), method = "spearman")
 }
 
 setwd("results/roc/batf_multiple_window")
@@ -169,22 +188,28 @@ for(l in 1:16){
   auc.ms[l] = roc.res.ms$auc
   roc.res.dcut = roc(controls = dcut[[l]][unbound.ind.test], cases = dcut[[l]][bound.ind.test])
   auc.dcut[l] = roc.res.dcut$auc
+  roc.res.cent = roc(controls = centFit.pwm[[l]][unbound.ind.test], cases = centFit.pwm[[l]][bound.ind.test])
 }
 
 pdf("batf_auc_multiple_window.pdf")
 plot(1:16, auc.ms, type = "b", ylim = c(0, 1), xlab = "window", ylab = "auc", main = "multiseq vs dcuts, auc")
-lines(1:16, auc.dcut, col = 2, type = "b")
-legend("bottomright", legend = c("Multiseq", "Dcuts"), lty = c(1, 1), col = 1:2)
+lines(1:16, auc.cent, col = 2, type = "b")
+text(x = 6:10, y = auc.ms, labels = round(auc.ms, 3), pos = 3, cex = 0.7, col = 1)
+text(x = 6:10, y = auc.cent, labels = round(auc.cent, 3), pos = 1, cex = 0.7, col = 2)
+legend("bottomright", legend = c("Multiseq", "CENTIPEDE"), lty = c(1, 1), col = 1:2)
 dev.off()
 
 pdf("batf_corr_pearson_multiple_window.pdf")
 plot(1:16, corr.ms, type = "b", ylim = c(0, 1), xlab = "window", ylab = "correlation", main = "multiseq vs dcuts, correlation")
-lines(1:16, corr.dcut, col = 2, type = "b")
-legend("bottomright", legend = c("Multiseq", "Dcuts"), lty = c(1, 1), col = 1:2)
+lines(1:16, corr.cent, col = 2, type = "b")
+legend("bottomright", legend = c("Multiseq", "CENTIPEDE"), lty = c(1, 1), col = 1:2)
 dev.off()
 
 pdf("batf_corr_spearman_multiple_window.pdf")
 plot(1:16, corr.rank.ms, type = "b", ylim = c(0, 1), xlab = "window", ylab = "correlation", main = "multiseq vs dcuts, rank correlation")
-lines(1:16, corr.rank.dcut, col = 2, type = "b")
-legend("bottomright", legend = c("Multiseq", "Dcuts"), lty = c(1, 1), col = 1:2)
+lines(1:16, corr.rank.cent, col = 2, type = "b")
+legend("bottomright", legend = c("Multiseq", "CENTIPEDE"), lty = c(1, 1), col = 1:2)
 dev.off()
+
+
+save.image("batf_multiple_window.RData")

@@ -249,7 +249,7 @@ legend("bottomright", legend = c("Multiseq", "Dcuts", "Centipede", "msCentipede"
 dev.off()
 
 pdf(paste(factor.name, "auc", "binary_all.pdf", sep = "_"))
-plot(6:10, auc.dcut.all, type = "b", col = 2, ylim = c(0, 1), xlab = "window", ylab = "auc", main = "all motifs, auroc")
+plot(6:10, auc.dcut.all, type = "b", col = 2, xlim = c(5.7, 10), ylim = c(0, 1), xlab = "window", ylab = "auc", main = "all motifs, auroc")
 lines(6:10, auc.cent.all, col = 3, type = "b")
 lines(6:10, auc.mscent.all, col = 4, type = "b")
 text(x = 6:10, y = auc.dcut.all, labels = round(auc.dcut.all, 3), pos = 3, cex = 0.7, col = 2)
@@ -333,3 +333,21 @@ lines(6:10, corr.rank.cent.all, col = 3, type = "b")
 lines(6:10, corr.rank.mscent.all, col = 4, type = "b")
 legend("bottomright", legend = c("Dcuts", "Centipede", "msCentipede"), lty = c(1, 1, 1), col = 2:4)
 dev.off()
+
+save(auc.ms,
+     auc.dcut,
+     auc.cent,
+     auc.mscent,
+     auc.dcut.all,
+     auc.cent.all,
+     auc.mscent.all,
+     corr.ms,
+     corr.dcut,
+     corr.rank.ms,
+     corr.rank.dcut,
+     corr.rank.cent,
+     corr.rank.mscent,
+     corr.rank.dcut.all,
+     corr.rank.cent.all,
+     corr.rank.mscent.all,
+     file = paste(factor.name, "res.Robj", sep = "_"))

@@ -14,7 +14,7 @@ reg.size = 2^14
 dprof = read.table("data/Batf_S356_dnase_data_large.txt.gz")
 cinfo = read.table("data/Batf_S356_site_and_chip_data.txt.gz",header = TRUE)
 
-
+pscore = cinfo[,5]
 ccount=cinfo[,6]
 peak.info = read.table("data/macs_peaks/Batf_q1pc_peaks.bed")
 peak.ind = 0
@@ -126,6 +126,23 @@ for(l in 1:9){
   ccount.post.logmean.list[[l]] = ccount.post.logmean   
 }
 
+
+centFit.pwm = list()
+centFit.pwm.all = list()
+for(l in 1:9){
+  #     centFit[[l]] <- fitCentipede(Xlist = list(DNase = as.matrix(dprof)[, c(base.ind.for[[l]], base.ind.rev[[l]])]), Y = matrix(rep(1,dim(dprof)[1], nc = 1)), sweeps = 1000)
+  #     centFit[[l]]$PostPr = centFit[[l]]$PostPr[!train.ind]
+  try.cent = try(centFit <- fitCentipede(Xlist = list(DNase = as.matrix(dprof)[, c(base.ind.for[[l]], base.ind.rev[[l]])]), Y = cbind(rep(1,dim(dprof)[1]),pscore), sweeps = 1000))
+  if(class(try.cent)=="try-error"){
+    centFit.pwm[[l]] = rep(NA, length(ccount.test))
+    centFit.pwm.all[[l]] = rep(NA, length(ccount))
+  }else{
+    centFit.pwm[[l]] = centFit$PostPr[!train.ind]
+    centFit.pwm.all[[l]] = centFit$PostPr
+  }
+}
+
+
 setwd("results/roc/batf_large")
 
 unbound.ind = unbound.ind.all[!train.ind]
@@ -162,10 +179,12 @@ for(l in 1:9){
   auc.dcut[l] = roc.res.dcut$auc
 }
 
-pdf(paste("batf", "auc", "binary.pdf", sep = "_"))
+pdf(paste("batf", "auc", "binary_large.pdf", sep = "_"))
 plot(6:14, auc.ms, type = "b", ylim = c(0.8, 1), xlab = "window", ylab = "auc", main = "multiseq vs dcuts, auc")
-lines(6:14, auc.dcut, col = 2, type = "b")
-legend("bottomright", legend = c("Multiseq", "Dcuts"), lty = c(1, 1), col = 1:2)
+lines(6:14, auc.cent, col = 2, type = "b")
+text(x = 6:10, y = auc.ms, labels = round(auc.ms, 3), pos = 3, cex = 0.7, col = 1)
+text(x = 6:10, y = auc.cent, labels = round(auc.cent, 3), pos = 1, cex = 0.7, col = 2)
+legend("bottomright", legend = c("Multiseq", "CENTIPEDE"), lty = c(1, 1), col = 1:2)
 dev.off()
 
 
