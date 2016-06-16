@@ -157,20 +157,22 @@ for(l in 1:5){
   mscent.binding = paste0(mscent.data.dest.path, paste0(factor.name, "_", nbase[l], "_msCentipede_binding_posterior.txt.gz"))
   mscent.log = paste0(mscent.data.dest.path, paste0(factor.name, "_", nbase[l], "_msCentipede_log.txt"))
   
-  mscent.learn = paste0(mscent.data.path, paste0(factor.name, "_data_learn.txt.gz"))
-  if(l != 5){
-    sys.mscent.learn = paste0("/data/tools/Python2_latest/bin/python2.7 ~/mscentipede/msCentipede/call_binding.py --task learn --mintol 1e-4 --model_file ", mscent.model, " --log_file ", mscent.log, " --window ", nbase[l], " ", mscent.learn, " ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep1.sort.bam ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep2.sort.bam")
-  }else{
-    sys.mscent.learn = paste0("/data/tools/Python2_latest/bin/python2.7 ~/mscentipede/msCentipede/call_binding.py --task learn --mintol 1e-4 --batch 7500 --model_file ", mscent.model, " --log_file ", mscent.log, " --window ", nbase[l], " ", mscent.learn, " ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep1.sort.bam ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep2.sort.bam")
+  if(!file.exists(mscent.binding)){
+    mscent.learn = paste0(mscent.data.path, paste0(factor.name, "_data_learn.txt.gz"))
+    if(l != 5){
+      sys.mscent.learn = paste0("/data/tools/Python2_latest/bin/python2.7 ~/mscentipede/msCentipede/call_binding.py --task learn --mintol 1e-4 --model_file ", mscent.model, " --log_file ", mscent.log, " --window ", nbase[l], " ", mscent.learn, " ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep1.sort.bam ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep2.sort.bam")
+    }else{
+      sys.mscent.learn = paste0("/data/tools/Python2_latest/bin/python2.7 ~/mscentipede/msCentipede/call_binding.py --task learn --mintol 1e-4 --batch 7500 --model_file ", mscent.model, " --log_file ", mscent.log, " --window ", nbase[l], " ", mscent.learn, " ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep1.sort.bam ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep2.sort.bam")
+    }
+    system(sys.mscent.learn)
+    
+    mscent.infer = paste0(mscent.data.path, paste0(factor.name, "_data_infer.txt.gz"))
+    sys.mscent.infer = paste0("/data/tools/Python2_latest/bin/python2.7 ~/mscentipede/msCentipede/call_binding.py --task infer --mintol 1e-4 --model_file ", mscent.model, " --posterior_file ", mscent.binding, " --log_file ", mscent.log, " --window ", nbase[l], " ", mscent.infer, " ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep1.sort.bam ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep2.sort.bam")
+    system(sys.mscent.infer)
   }
-  system(sys.mscent.learn)
-  
-  mscent.infer = paste0(mscent.data.path, paste0(factor.name, "_data_infer.txt.gz"))
-  sys.mscent.infer = paste0("/data/tools/Python2_latest/bin/python2.7 ~/mscentipede/msCentipede/call_binding.py --task infer --mintol 1e-4 --model_file ", mscent.model, " --posterior_file ", mscent.binding, " --log_file ", mscent.log, " --window ", nbase[l], " ", mscent.infer, " ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep1.sort.bam ", mscent.data.path, "wgEncodeUwDnaseGm12878AlnRep2.sort.bam")
-  system(sys.mscent.infer)
   
   mscent.post = read.table(mscent.binding, header = TRUE)
-  
+    
   mscentFit.all[[l]] = mscent.post$LogPosOdds
   mscentFit[[l]] = mscentFit.all[[l]][!train.ind]
 }
